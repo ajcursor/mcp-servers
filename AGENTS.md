@@ -53,13 +53,13 @@ Add an entry to `deploy/mcp-servers.yaml` (`path`, `entry`, `port`, `service_acc
 2. On confirmation: create a Linear issue in the DAZN Ops project holding the PR plan
    and link it in the thread. Reply "Sent to engineering for approval."
 3. Post the PR plan (repo, tools, exclusions, files, auth, tests, rollout, Linear link)
-   in #eng-approvals. Move the issue to "Awaiting approval". Subscribe to replies
+   in #dazn-eng-approvals. Move the issue to "Awaiting approval". Subscribe to replies
    there and do nothing until an engineer replies "approved".
 4. Once approved: comment the approver on the issue and move it to "In progress".
    Use parallel subagents for build, tests and docs, following servers/whatson.
    Open one PR from a branch named <ISSUE-ID>-xytech-mcp, enable auto-merge,
    and subscribe to the PR.
-5. When it merges: post "Merged & deployed · PR #<n>" in #eng-approvals, then reply
+5. When it merges: post "Merged & deployed · PR #<n>" in #dazn-eng-approvals, then reply
    in the original thread "Built. GrokBot can now use Xytech. Try it."
 
 ### How the messages should read
@@ -78,9 +78,9 @@ Keep every Slack message short and written for the person reading it. The reques
 
 **Step 2:** after the Linear issue exists: `Sent to engineering for approval.` plus the issue link.
 
-**Step 3, the PR plan** (a new message in #eng-approvals, not in the ops thread):
+**Step 3, the PR plan** (a new message in #dazn-eng-approvals, not in the ops thread):
 
-> PR plan for review · requested by Ops in #ops-requests: Xytech MCP server
+> PR plan for review · requested by Ops in #dazn-ops-requests: Xytech MCP server
 > **Repo** dazn-ops/mcp-servers
 > **Tools** 4 read · 2 write (create / amend booking)
 > **Not included** Delete resources, change rates, cancel orders
@@ -92,13 +92,13 @@ Keep every Slack message short and written for the person reading it. The reques
 >
 > Reply "approved" to start the build, or tell me what to change.
 
-Post it with the Slack tool into #eng-approvals. Do not move this conversation to that channel.
+Post it with the Slack tool into #dazn-eng-approvals. Do not move this conversation to that channel.
 
-**Step 4:** when the build starts, post `3 agents running: build · tests · docs` in #eng-approvals.
+**Step 4:** when the build starts, post `3 agents running: build · tests · docs` in #dazn-eng-approvals.
 
-**Step 5:** `✅ Merged & deployed · PR #<n>` in #eng-approvals, then `✅ Built. GrokBot can now use Xytech. Try it.` in the original thread.
+**Step 5:** `✅ Merged & deployed · PR #<n>` in #dazn-eng-approvals, then `✅ Built. GrokBot can now use Xytech. Try it.` in the original thread.
 
-**Waiting:** subscribe to replies in the PR-plan thread in #eng-approvals (or to new messages in #eng-approvals), then end your turn. Wake only for a reply that says "approved"; answer questions in that thread and keep waiting. After opening the PR, subscribe to it and end your turn until it merges.
+**Waiting:** subscribe to replies in the PR-plan thread in #dazn-eng-approvals (or to new messages in #dazn-eng-approvals), then end your turn. Wake only for a reply that says "approved"; answer questions in that thread and keep waiting. After opening the PR, subscribe to it and end your turn until it merges.
 
 **The PR:** title `Add Xytech MCP server (read + book resources)`, branch `<ISSUE-ID>-xytech-mcp`, and the body starts with `Fixes <ISSUE-ID>` so Linear links the PR and closes the issue on merge. If you cannot enable auto-merge yourself, add the `auto-merge` label: the `auto-merge` workflow enables it for `*-mcp` branches anyway. The required check `ci / test` is the merge gate; Bugbot reviews the PR.
 
