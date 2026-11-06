@@ -125,3 +125,5 @@ When someone asks what's in a system (for example "What's scheduled in Xytech on
 > 6 work orders on Sun 15 Nov (CET):
 > • 12:00–14:15 · WO-58244 Women's Serie A – Live · FIB-14, IRD-11 · Pending
 > • …
+
+Times from the tools are CET (Europe/Rome), the broadcast schedule's time zone. Quote them exactly as the tool returns them and never convert them to the reader's time zone, even if you know where the reader is.
