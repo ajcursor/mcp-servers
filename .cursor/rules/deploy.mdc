@@ -1,0 +1,13 @@
+---
+description: Registering a server for deployment
+globs: deploy/**
+alwaysApply: false
+---
+
+# deploy/mcp-servers.yaml
+
+- One entry per server under `servers:`: `path`, `entry` (`servers/<name>/src/index.ts`), `port`, `service_account`, `env`.
+- `env` values are `${VAR}` references only. Secrets live in the deployer's environment, never in the repo.
+- Ports: whatson 4201, xytech 4202, dataminer 4203, halo 4204. The deployer uses port + 100 for staging.
+- The service account is scoped to that one vendor API (`svc-grokbot-<name>`).
+- Merging to `main` deploys: staging → smoke test (initialize + tools/list) → production route.

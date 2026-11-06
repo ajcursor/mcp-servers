@@ -1,0 +1,32 @@
+# MCP servers the deployer runs. Merging a change to main that adds or changes an entry deploys it:
+# start on the staging port (port + 100) → smoke test (initialize + tools/list) → switch the gateway
+# route to it → stop the old process. The gateway serves each one at https://<tunnel>/<name>/mcp.
+#
+# env values are ${VAR} references, filled from the deployer's environment. Never put secrets here.
+servers:
+  whatson:
+    path: servers/whatson
+    entry: servers/whatson/src/index.ts
+    port: 4201
+    service_account: svc-grokbot-whatson
+    env:
+      WHATSON_API_URL: ${WHATSON_API_URL}
+      WHATSON_API_TOKEN: ${WHATSON_API_TOKEN}
+
+  dataminer:
+    path: servers/dataminer
+    entry: servers/dataminer/src/index.ts
+    port: 4203
+    service_account: svc-grokbot-dataminer
+    env:
+      DATAMINER_API_URL: ${DATAMINER_API_URL}
+      DATAMINER_API_TOKEN: ${DATAMINER_API_TOKEN}
+
+  halo:
+    path: servers/halo
+    entry: servers/halo/src/index.ts
+    port: 4204
+    service_account: svc-grokbot-halo
+    env:
+      HALO_API_URL: ${HALO_API_URL}
+      HALO_API_TOKEN: ${HALO_API_TOKEN}

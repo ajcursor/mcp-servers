@@ -1,0 +1,43 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Branch protection on main requires this exact check name.
+    name: ci / test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+      - name: Check out the Xytech sandbox (mediapulse-sim)
+        id: sim
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/mediapulse-sim
+          path: .sandbox/mediapulse-sim
+          token: ${{ secrets.SIM_REPO_TOKEN || github.token }}
+      - name: Install the sandbox
+        if: steps.sim.outcome == 'success'
+        run: npm ci --prefix .sandbox/mediapulse-sim
+      - name: Sandbox tests
+        if: steps.sim.outcome == 'success'
+        env:
+          MEDIAPULSE_SIM_DIR: .sandbox/mediapulse-sim
+        run: npm run test:sandbox
+      - name: Sandbox tests skipped
+        if: steps.sim.outcome != 'success'
+        run: echo "::notice::mediapulse-sim not reachable (add a SIM_REPO_TOKEN secret with read access to it); sandbox tests skipped."

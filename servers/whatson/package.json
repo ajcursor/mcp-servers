@@ -1,0 +1,13 @@
+{
+  "name": "@dazn-ops/whatson-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for Mediagenix What'sOn: fixtures, channel clashes, kick-off and channel changes, listings.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@dazn-ops/mcp-kit": "*"
+  }
+}

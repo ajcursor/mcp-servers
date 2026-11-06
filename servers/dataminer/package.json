@@ -1,0 +1,13 @@
+{
+  "name": "@dazn-ops/dataminer-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for Skyline DataMiner MediaOps: resource health, jobs, alarms.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@dazn-ops/mcp-kit": "*"
+  }
+}

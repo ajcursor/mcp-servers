@@ -1,0 +1,12 @@
+---
+description: Unit and sandbox tests for MCP servers
+globs: servers/**/test/**
+alwaysApply: false
+---
+
+# Tests
+
+- Unit tests (`test/tools.test.ts`): `connect((s) => register(s, ctx))` and `fakeFetch({...})` from `@dazn-ops/mcp-kit/testing`. Build the client with `createApiClient({ ..., fetch: f, retries: 0 })`. Call tools through MCP and assert on the text the bot will see. Cover: tool list, annotations on write tools, each tool's happy path, and an API refusal.
+- Sandbox tests (`test/<name>.sandbox.test.ts`): top-level `const sandbox = await startSandbox({ envUrl: 'XYTECH_SANDBOX_URL', envToken: 'XYTECH_SANDBOX_TOKEN', envDir: 'MEDIAPULSE_SIM_DIR', defaultDirs: ['../mediapulse-sim', '.sandbox/mediapulse-sim'], port: 4952, token: 'sandbox-token' })`, then `describe.skipIf(!sandbox)`, `beforeEach(() => sandbox!.reset())`, `afterAll(() => sandbox?.stop())`.
+- Never point tests at the demo or production APIs.
+- `npm run test:unit` excludes `*.sandbox.test.ts`; `npm run test:sandbox` runs only those.

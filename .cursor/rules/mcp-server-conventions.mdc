@@ -1,0 +1,15 @@
+---
+description: How to write an MCP server and its tools in this repo
+globs: servers/**,packages/mcp-kit/**
+alwaysApply: false
+---
+
+# MCP server conventions
+
+- Follow `servers/whatson`: `src/index.ts` (NAME, VERSION, TOOLS, `register`, start when main), `src/client.ts` (typed client over `createApiClient` + `Ctx`), `src/schemas.ts`, `src/format.ts`, one file per tool in `src/tools/`.
+- Define tools with `tool<Ctx>()({ name, title, description, input, write?, run })`. `input` is a zod shape; describe every field with an example.
+- Read tools end their description with "Read only." Write tools set `write: true` and say they "need ops approval in chat"; the kit refuses to start otherwise.
+- No delete, rate-change or cancel tools.
+- `run` returns plain text for a chat: answer first, CET times (`cetRange`, `cet`, `cetTime`), `gbp()` for money, ids next to names, ✅ ⚠️ ❌.
+- Let `ApiError`s propagate; the kit turns them into tool errors with the vendor's message.
+- Read config with `env('X_API_URL', default)` and `env('X_API_TOKEN', default)`; `PORT` comes from the deployer.

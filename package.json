@@ -1,0 +1,33 @@
+{
+  "name": "mcp-servers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DAZN Ops MCP servers: thin wrappers that let GrokBot and Cursor use the ops systems (What'sOn, DataMiner, HALO, …). Deployed locally by the demo deployer from deploy/mcp-servers.yaml.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "workspaces": [
+    "packages/*",
+    "servers/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude \"**/*.sandbox.test.ts\"",
+    "test:sandbox": "vitest run --passWithNoTests sandbox",
+    "start": "node --import tsx scripts/start.ts",
+    "ci": "npm run typecheck && npm run test:unit && npm run test:sandbox"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

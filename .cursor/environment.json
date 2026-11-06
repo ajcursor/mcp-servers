@@ -1,0 +1,9 @@
+{
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "Xytech sandbox (mediapulse-sim :4902)",
+      "command": "cd \"${MEDIAPULSE_SIM_DIR:-.sandbox/mediapulse-sim}\" && npm run sandbox"
+    }
+  ]
+}

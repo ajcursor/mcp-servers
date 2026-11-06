@@ -1,0 +1,13 @@
+{
+  "name": "@dazn-ops/halo-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for HALO change records.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@dazn-ops/mcp-kit": "*"
+  }
+}
