@@ -11,6 +11,6 @@ Xytech MediaPulse (resource bookings) for GrokBot: resources, availability, book
 | `create_booking` | Write · needs ops approval | Book a resource onto a work order |
 | `amend_booking` | Write · needs ops approval | Change a booking's window or resource |
 
-Does not delete resources, change rate cards, or cancel bookings.
+Does not delete resources, change rates, or cancel bookings.
 
 Env: `XYTECH_API_URL`, `XYTECH_API_TOKEN` (service account `svc-grokbot-xytech`), `PORT` (4202).
