@@ -1,0 +1,13 @@
+{
+  "name": "@dazn-ops/xytech-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for Xytech MediaPulse: resources, availability, bookings and rates.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@dazn-ops/mcp-kit": "*"
+  }
+}
