@@ -21,6 +21,11 @@ export function clockRange(start: string, end: string): string {
   return `${cetTime(start)}–${cet(end)}`;
 }
 
+function shownRange(start: string, end: string, clocksOnly = false): string | undefined {
+  if (!start || !end || Number.isNaN(Date.parse(start)) || Number.isNaN(Date.parse(end))) return undefined;
+  return clocksOnly ? clockRange(start, end) : cetRange(start, end);
+}
+
 export function workOrderLine(wo: WorkOrder, opts: { clocksOnly: boolean }): string {
   const window = opts.clocksOnly ? clockRange(wo.start, wo.end) : cetRange(wo.start, wo.end);
   const resources = wo.resources.length ? wo.resources.map((r) => r.id).join(', ') : 'no resources';
@@ -40,13 +45,17 @@ export function availabilityLine(a: Availability): string {
   const mark = statusMark(a.status);
   const bits = [`${mark} ${a.resource_id} ${a.name}`];
   if (a.note) bits.push(a.note);
-  if (a.booking) bits.push(`${a.booking.work_order} ${a.booking.name} ${clockRange(a.booking.start, a.booking.end)}`);
+  if (a.booking) {
+    const when = shownRange(a.booking.start, a.booking.end, true);
+    bits.push([a.booking.work_order, a.booking.name, when].filter(Boolean).join(' '));
+  }
   else if (!a.note && (a.status === 'free' || a.status === 'available' || a.status === 'clear')) bits.push('free');
   return bits.join(' · ');
 }
 
 export function rateCard(q: RateQuote): string {
-  const lines = [`${q.resource_id} ${q.name} · ${cetRange(q.start, q.end)} CET · ${gbp(q.total)}`];
+  const window = shownRange(q.start, q.end) ?? 'unknown window';
+  const lines = [`${q.resource_id} ${q.name} · ${window} CET · ${gbp(q.total)}`];
   for (const row of q.breakdown ?? []) lines.push(`• ${row.label} ${gbp(row.amount)}`);
   return lines.join('\n');
 }

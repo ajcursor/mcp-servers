@@ -15,6 +15,13 @@ const sandbox = await startSandbox({
 const START = '2026-11-15T12:00:00+01:00';
 const END = '2026-11-15T14:15:00+01:00';
 
+async function raw(path: string, query: Record<string, string>): Promise<string> {
+  const url = new URL(path.replace(/^\//, ''), sandbox!.url.replace(/\/+$/, '') + '/');
+  for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
+  const res = await fetch(url, { headers: { authorization: `Bearer ${sandbox!.token}`, accept: 'application/json' } });
+  return `${res.status} ${url.pathname}${url.search} ${(await res.text()).slice(0, 600)}`;
+}
+
 describe.skipIf(!sandbox)('xytech sandbox', () => {
   let mcp: Awaited<ReturnType<typeof connect>> | undefined;
 
@@ -50,7 +57,13 @@ describe.skipIf(!sandbox)('xytech sandbox', () => {
       return;
     }
     const r = await mcp!.call('get_availability', { resource_ids: [id], start: START, end: END });
-    expect(r.isError).toBe(false);
+    if (r.isError) {
+      const bodies = await Promise.all([
+        raw('availability', { resource_ids: id, start: START, end: END }),
+        raw('availability', { resource_id: id, start: START, end: END }),
+      ]);
+      expect.fail(`${r.text}\n${bodies.join('\n')}`);
+    }
     expect(r.text.includes(id) || r.text.includes('No availability')).toBe(true);
   });
 
@@ -69,6 +82,9 @@ describe.skipIf(!sandbox)('xytech sandbox', () => {
       return;
     }
     const r = await mcp!.call('get_rates', { resource_id: id, start: START, end: END });
+    if (r.isError && !r.text.includes('Xytech API')) {
+      expect.fail(`${r.text}\n${await raw('rates', { resource_id: id, start: START, end: END })}`);
+    }
     if (r.isError) expect(r.text).toContain('Xytech API');
     else expect(r.text).toContain('£');
   });
