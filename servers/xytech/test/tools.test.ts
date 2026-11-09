@@ -49,7 +49,36 @@ const f = fakeFetch({
   'GET /work-orders/WO-58244': () => WO,
   'GET /work-orders/WO-MISSING': () => ({ status: 404, body: { error: { code: 'not_found', message: 'No such work order' } } }),
   'GET /work-orders': (r) => ({ work_orders: r.query.event_id === 'EVB' ? [WO] : [] }),
-  'GET /bookings': (r) => ({ work_orders: r.query.date === '2026-11-15' ? [WO] : [] }),
+  'GET /bookings': (r) => {
+    if (r.query.date === '2026-11-15') return { work_orders: [WO] };
+    if (r.query.date === '2026-11-17') {
+      return {
+        bookings: [
+          {
+            id: 'BK-1',
+            work_order: 'WO-58244',
+            work_order_name: "Women's Serie A – Live",
+            resource_id: 'FIB-14',
+            resource_name: 'Fibre path 14',
+            start: '2026-11-17T12:00:00+01:00',
+            end: '2026-11-17T14:15:00+01:00',
+            phase: 'Pending',
+          },
+          {
+            id: 'BK-2',
+            work_order: 'WO-58244',
+            work_order_name: "Women's Serie A – Live",
+            resource_id: 'IRD-11',
+            resource_name: 'IRD 11',
+            start: '2026-11-17T12:00:00+01:00',
+            end: '2026-11-17T16:00:00+01:00',
+            phase: 'Pending',
+          },
+        ],
+      };
+    }
+    return { work_orders: [] };
+  },
   'GET /rates': () => ({
     resource_id: 'FIB-14',
     name: 'Fibre path 14',
@@ -158,6 +187,14 @@ describe('xytech MCP server', () => {
     expect(r.isError).toBe(false);
     expect(r.text).toBe(
       "1 work order on Sun 15 Nov (CET):\n• 12:00–14:15 · WO-58244 Women's Serie A – Live · FIB-14, IRD-11 · Pending",
+    );
+  });
+
+  it('groups a date of booking rows into one line per work order', async () => {
+    const r = await mcp.call('list_bookings', { date: '2026-11-17' });
+    expect(r.isError).toBe(false);
+    expect(r.text).toBe(
+      "1 work order on Tue 17 Nov (CET):\n• 12:00–16:00 · WO-58244 Women's Serie A – Live · FIB-14, IRD-11 · Pending",
     );
   });
 

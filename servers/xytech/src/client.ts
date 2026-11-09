@@ -54,6 +54,18 @@ function listedResources(bag: Record<string, unknown>): ResourceRef[] {
   }, []);
 }
 
+/** A booking row names one resource; a work order names the set. */
+function singularResource(bag: Record<string, unknown>): ResourceRef | undefined {
+  const id = text(bag.resource_id);
+  if (id) return { id, name: text(bag.resource_name), role: text(bag.role) };
+  return ref(bag.resource);
+}
+
+function addResource(resources: ResourceRef[], resource: ResourceRef | undefined): ResourceRef[] {
+  if (!resource?.id || resources.some((r) => r.id === resource.id)) return resources;
+  return [...resources, resource];
+}
+
 function workOrderOf(value: unknown): WorkOrder | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const bag = value as Record<string, unknown>;
@@ -61,11 +73,25 @@ function workOrderOf(value: unknown): WorkOrder | undefined {
   const window = (bag.window && typeof bag.window === 'object' ? bag.window : nested?.window && typeof nested.window === 'object' ? nested.window : {}) as Record<string, unknown>;
   const start = iso(bag.start ?? bag.from ?? nested?.start ?? nested?.from ?? window.start) ?? '';
   const end = iso(bag.end ?? bag.to ?? nested?.end ?? nested?.to ?? window.end) ?? '';
-  const id = text(bag.id) ?? text(bag.work_order) ?? text(bag.work_order_id) ?? text(bag.number) ?? text(nested?.id) ?? text(nested?.work_order_id) ?? text(nested?.number) ?? '';
-  const name = text(bag.name) ?? text(bag.work_order_name) ?? text(bag.title) ?? text(nested?.name) ?? text(nested?.work_order_name) ?? text(nested?.title) ?? '';
+  // GET /bookings rows are bookings (BK-…, one resource_id) that belong to a work order.
+  // The chat line is the work order, so prefer that id over the booking id.
+  const explicitWo = text(bag.work_order) ?? text(bag.work_order_id) ?? (nested ? text(nested.id) ?? text(nested.work_order_id) ?? text(nested.number) : undefined);
+  const isBookingRow = !!text(bag.resource_id) && !!explicitWo && explicitWo !== text(bag.id);
+  const id = isBookingRow
+    ? explicitWo
+    : text(bag.id) ?? text(bag.work_order) ?? text(bag.work_order_id) ?? text(bag.number) ?? text(nested?.id) ?? text(nested?.work_order_id) ?? text(nested?.number) ?? '';
+  const name = (isBookingRow ? text(bag.work_order_name) : undefined) ?? text(bag.name) ?? text(bag.work_order_name) ?? text(bag.title) ?? text(nested?.name) ?? text(nested?.work_order_name) ?? text(nested?.title) ?? '';
   if (!id && !name && !start && !end) return undefined;
   let resources = listedResources(bag);
   if (!resources.length && nested) resources = listedResources(nested);
+  resources = addResource(resources, singularResource(bag));
+  if (nested) resources = addResource(resources, singularResource(nested));
+  if (!resources.length && Array.isArray(bag.bookings)) {
+    for (const row of bag.bookings) {
+      if (!row || typeof row !== 'object') continue;
+      resources = addResource(resources, singularResource(row as Record<string, unknown>));
+    }
+  }
   return {
     id,
     name,
@@ -95,6 +121,28 @@ function workOrdersIn(data: unknown): WorkOrder[] {
     if (list.length) return list;
   }
   return [];
+}
+
+/** GET /bookings?date returns one row per booking. Chat wants one line per work order. */
+function oneLinePerWorkOrder(list: WorkOrder[]): WorkOrder[] {
+  const order: string[] = [];
+  const grouped = new Map<string, WorkOrder>();
+  for (const wo of list) {
+    const key = wo.id || `${wo.name}|${wo.start}|${wo.end}`;
+    const prev = grouped.get(key);
+    if (!prev) {
+      order.push(key);
+      grouped.set(key, { ...wo, resources: [...wo.resources] });
+      continue;
+    }
+    for (const resource of wo.resources) prev.resources = addResource(prev.resources, resource);
+    if (wo.name && !prev.name) prev.name = wo.name;
+    if (wo.phase && !prev.phase) prev.phase = wo.phase;
+    if (wo.event_id && !prev.event_id) prev.event_id = wo.event_id;
+    if (wo.start && (!prev.start || Date.parse(wo.start) < Date.parse(prev.start))) prev.start = wo.start;
+    if (wo.end && (!prev.end || Date.parse(wo.end) > Date.parse(prev.end))) prev.end = wo.end;
+  }
+  return order.map((key) => grouped.get(key)!);
 }
 
 function bookingOf(value: unknown): BusyBooking | undefined {
@@ -170,7 +218,7 @@ export function xytechClient(api: ApiClient) {
       return workOrdersIn(data)[0] ?? data;
     },
     workOrdersByEvent: async (eventId: string) => workOrdersIn(await api.get('/work-orders', { event_id: eventId })),
-    bookingsByDate: async (date: string) => workOrdersIn(await api.get('/bookings', { date })),
+    bookingsByDate: async (date: string) => oneLinePerWorkOrder(workOrdersIn(await api.get('/bookings', { date }))),
     rates: async (q: { resource_id: string; start: string; end: string }) => quoteOf(await api.get('/rates', q), q),
     createBooking: (body: { work_order: string; resource_id: string; start: string; end: string; role?: string; cost_approved_by?: string }) =>
       api.post<{ booking: Booking }>('/bookings', body),
