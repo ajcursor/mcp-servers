@@ -119,7 +119,16 @@ Service account `svc-grokbot-xytech`, env `XYTECH_API_URL` / `XYTECH_API_TOKEN`,
 
 ## Questions about live systems
 
-When someone asks what's in a system (for example "What's scheduled in Xytech on Sun 15 Nov?"), answer from the MCP tools, not from this repo's code or test data. Say which tool you called, then answer in the tool's own format, for example:
+When someone asks what's in a system (for example "What's scheduled in Xytech on Sun 15 Nov?"), answer from the MCP tools, not from this repo's code or test data.
+
+These are quick questions. Answer them quickly:
+
+- Make the one tool call that answers the question, once. "What's scheduled in Xytech on <date>" is `xytech.list_bookings(date)`. Make a second call only if the first can't answer it.
+- Don't read the repo, run commands, start the sandbox or run tests first. None of that is needed to answer.
+- Don't check availability, rates or other work orders unless they were asked about.
+- Reply as soon as you have the answer. Don't open a branch, PR or Linear issue.
+
+Say which tool you called, then answer in the tool's own format, for example:
 
 > Called xytech.list_bookings(date: 2026-11-15) · 6 work orders
 > 6 work orders on Sun 15 Nov (CET):
