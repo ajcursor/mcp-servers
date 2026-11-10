@@ -13,6 +13,15 @@ servers:
       WHATSON_API_URL: ${WHATSON_API_URL}
       WHATSON_API_TOKEN: ${WHATSON_API_TOKEN}
 
+  xytech:
+    path: servers/xytech
+    entry: servers/xytech/src/index.ts
+    port: 4202
+    service_account: svc-grokbot-xytech
+    env:
+      XYTECH_API_URL: ${XYTECH_API_URL}
+      XYTECH_API_TOKEN: ${XYTECH_API_TOKEN}
+
   dataminer:
     path: servers/dataminer
     entry: servers/dataminer/src/index.ts

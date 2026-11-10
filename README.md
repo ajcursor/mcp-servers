@@ -5,12 +5,13 @@ MCP servers that let GrokBot and Cursor use DAZN's operations systems. Each serv
 | Server | Tools | Port | Service account |
 |---|---|---|---|
 | [whatson](servers/whatson) | `get_fixture`, `list_fixtures`, `check_channel_clash`, `update_fixture`*, `set_channel`*, `publish_listings`* | 4201 | `svc-grokbot-whatson` |
+| [xytech](servers/xytech) | `list_resources`, `get_availability`, `list_bookings`, `get_rates`, `create_booking`*, `amend_booking`* | 4202 | `svc-grokbot-xytech` |
 | [dataminer](servers/dataminer) | `get_resource_health`, `list_jobs`, `move_job`*, `raise_alarm`*, `clear_alarm`* | 4203 | `svc-grokbot-dataminer` |
 | [halo](servers/halo) | `create_change_record`* | 4204 | `svc-grokbot-halo` |
 
 \* write tool: needs ops approval in chat.
 
-There is no Xytech server yet. See [AGENTS.md](AGENTS.md) for how integration requests from Slack become servers here.
+Xytech is in the table above. Integration requests from Slack still follow [AGENTS.md](AGENTS.md).
 
 ## Develop
 
