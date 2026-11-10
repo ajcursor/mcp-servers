@@ -10,12 +10,8 @@ export function xytechClient(api: ApiClient) {
       return raw.map(toResource).filter((r): r is Resource => !!r);
     },
     async availability(resource_ids: string[], start: string, end: string): Promise<Availability[]> {
-      const raw = unwrapList(await api.get<unknown>('/availability', { resource_ids: resource_ids.join(','), start, end }), [
-        'availability',
-        'resources',
-        'items',
-      ]);
-      return raw.map(toAvailability).filter((r): r is Availability => !!r);
+      const raw = await api.get<unknown>('/availability', { resource_ids: resource_ids.join(','), start, end });
+      return availabilityRows(raw).map(toAvailability).filter((r): r is Availability => !!r);
     },
     async workOrder(workOrderId: string): Promise<unknown> {
       return unwrapRecord(await api.get<unknown>(`/work-orders/${id(workOrderId)}`), ['work_order', 'workOrder']);
@@ -129,15 +125,60 @@ function toConflicts(v: unknown): Conflict[] {
   return out;
 }
 
+const AVAIL_KEYS = ['availability', 'resources', 'items', 'results', 'slots', 'entries', 'data', 'windows'] as const;
+
+/** A list, a single row, or a map of resource id → status. */
+function availabilityRows(data: unknown): unknown[] {
+  if (Array.isArray(data)) return data;
+  const rec = asRecord(data);
+  if (!rec) return [];
+  for (const key of AVAIL_KEYS) {
+    const v = rec[key];
+    if (Array.isArray(v)) return v;
+    const inner = asRecord(v);
+    if (!inner) continue;
+    if (rowId(inner)) return [inner];
+    const mapped = Object.entries(inner).flatMap(([k, val]) => {
+      if (typeof val === 'string') return [{ resource_id: k, state: val }];
+      const o = asRecord(val);
+      return o ? [{ resource_id: rowId(o) ?? k, ...o }] : [];
+    });
+    if (mapped.length) return mapped;
+  }
+  return rowId(rec) ? [rec] : [];
+}
+
+function rowId(o: Record<string, unknown>): string | undefined {
+  const nested = asRecord(o.resource);
+  return (
+    str(o, ['resource_id', 'id', 'code', 'resource_code']) ??
+    (typeof o.resource === 'string' ? o.resource.trim() : undefined) ??
+    (nested && str(nested, ['id', 'resource_id', 'code', 'resource_code']))
+  );
+}
+
+function stateText(v: unknown): string | undefined {
+  if (typeof v === 'string' && v.trim()) return v.trim();
+  const o = asRecord(v);
+  return o ? str(o, ['code', 'name', 'state', 'status', 'value']) : undefined;
+}
+
 function toAvailability(v: unknown): Availability | undefined {
   const o = asRecord(v);
   if (!o) return undefined;
-  const id = str(o, ['resource_id', 'id', 'code']);
+  const nested = asRecord(o.resource);
+  const id = rowId(o);
   if (!id) return undefined;
+  let state = stateText(o.state ?? o.status ?? o.availability);
+  if (!state) {
+    if (o.busy === true || o.available === false || o.free === false) state = 'busy';
+    else if (o.available === true || o.free === true) state = 'free';
+    else if (nested) state = stateText(nested.state ?? nested.status ?? nested.availability);
+  }
   return {
     id,
-    name: str(o, ['name', 'resource_name', 'title']),
-    state: str(o, ['state', 'status', 'availability']),
+    name: str(o, ['name', 'resource_name', 'title']) ?? (nested && str(nested, ['name', 'resource_name', 'title'])),
+    state,
     note: str(o, ['note', 'reason', 'message', 'detail']),
     bookings: toConflicts(o.bookings ?? o.booking),
     conflicts: toConflicts(o.conflicts ?? o.conflict),

@@ -36,7 +36,7 @@ describe.skipIf(!sandbox)('xytech sandbox', () => {
 
   async function resourceId(): Promise<string | undefined> {
     const listed = await mcp.call('list_resources');
-    return listed.text.match(/[A-Z][A-Z0-9-]*/)?.[0];
+    return listed.text.match(/•\s+([^\s·]+)/)?.[1];
   }
 
   it('list_resources returns a bullet list or says there are none', async () => {
@@ -46,12 +46,19 @@ describe.skipIf(!sandbox)('xytech sandbox', () => {
   });
 
   it('get_availability reports a state, or a Xytech API error, for the first resource', async () => {
-    const id = await resourceId();
-    expect(id).toBeTruthy();
+    const listed = await mcp.call('list_resources');
+    const id = listed.text.match(/•\s+([^\s·]+)/)?.[1];
+    expect(id, listed.text).toBeTruthy();
     const r = await mcp.call('get_availability', { resource_ids: [id], ...WINDOW });
     const state = /✅|⚠️|❌/.test(r.text);
     const apiError = r.isError && r.text.includes('Xytech API');
-    expect(state || apiError).toBe(true);
+    if (state || apiError) return;
+    const q = new URLSearchParams({ resource_ids: id!, start: WINDOW.start, end: WINDOW.end });
+    const raw = await fetch(`${sandbox!.url}/availability?${q}`, { headers: { authorization: `Bearer ${sandbox!.token}`, accept: 'application/json' } });
+    const body = (await raw.text()).slice(0, 1500);
+    const spec = await fetch(`${sandbox!.url}/openapi.yaml`, { headers: { accept: 'text/yaml' } }).then((res) => res.text()).catch(() => '');
+    const paths = spec.split('\n').filter((line) => line.includes('availability') || line.includes('resource_id')).slice(0, 40).join('\n');
+    throw new Error(`availability ${raw.status} tool=${JSON.stringify(r)} body=${body}\n${paths}`);
   });
 
   it('list_bookings for 15 Nov talks about work orders', async () => {
